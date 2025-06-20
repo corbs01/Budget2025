@@ -41,7 +41,11 @@ def collect_expenses():
         print(f"\n📂 {category_group}:")
 
         for item in items:
-            response = input(f"Do you want to add '{item}'? (yes/no): ").lower()
+            while True:
+                response = input(f"Do you want to add '{item}'? (yes/no): ").lower()
+                if response in ('yes', 'no'):
+                    break
+                print("❌ Please enter 'yes' or 'no'.")
             if response == 'yes':
                 try:
                     amount = float(input(f"Enter amount for {item}: $"))
