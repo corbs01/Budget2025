@@ -1,9 +1,15 @@
 from income import collect_income, calculate_total_monthly_income
 from expenses import collect_expenses, calculate_total_expenses, summarize_expenses_by_category
 from storage import save_budget_data, load_budget_data
+from visuals import plot_expense_breakdown
 from typing import List, Dict, Any
 
-    
+# Color codes for terminal output
+GREEN = "\033[92m"
+YELLOW = "\033[93m"
+RED = "\033[91m"
+RESET = "\033[0m"
+
 def run_budget_tool() -> None:
     print("✨ Welcome to your Interactive Budget Tool ✨")
 
@@ -31,13 +37,20 @@ def run_budget_tool() -> None:
         print(f"- {category}: ${total:.2f}")
     print(f"💸 Total Monthly Expenses: ${total_expenses:.2f}")
 
+    plot = input("Would you like to view a pie chart of expenses? (yes/no): ").lower()
+    if plot == "yes":
+        plot_expense_breakdown(expense_summary)
+
+
     balance = total_income - total_expenses
-    status = (
-        "🟢 Surplus – You're living within your means!"
-        if balance > 0 else
-        "🟡 Break-even – You're on the edge!" if balance == 0 else
-        "🔴 Deficit – You're overspending!"
-    )
+
+    # Apply color-coded status
+    if balance > 0:
+        status = f"{GREEN}🟢 Surplus – You're living within your means!{RESET}"
+    elif balance == 0:
+        status = f"{YELLOW}🟡 Break-even – You're on the edge!{RESET}"
+    else:
+        status = f"{RED}🔴 Deficit – You're overspending!{RESET}"
 
     print(f"\n📊 Monthly Balance: ${balance:.2f}")
     print(f"📣 Status: {status}\n")
@@ -45,8 +58,6 @@ def run_budget_tool() -> None:
     save = input("Would you like to save this budget data? (yes/no): ").lower()
     if save == "yes":
         save_budget_data(incomes, expenses)
-
-
 
 if __name__ == "__main__":
     run_budget_tool()
