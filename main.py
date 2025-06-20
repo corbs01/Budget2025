@@ -1,22 +1,25 @@
 from income import collect_income, calculate_total_monthly_income
 from expenses import collect_expenses, calculate_total_expenses, summarize_expenses_by_category
+from storage import save_budget_data, load_budget_data
 from typing import List, Dict, Any
 
+    
 def run_budget_tool() -> None:
     print("✨ Welcome to your Interactive Budget Tool ✨")
-    input("Press Enter to begin...")
 
-    try:
-        incomes: List[Dict[str, Any]] = collect_income()
-        total_income: float = calculate_total_monthly_income(incomes)
+    use_saved = input("Would you like to load your previous budget? (yes/no): ").lower()
+    if use_saved == "yes":
+        data = load_budget_data()
+        incomes = data["incomes"]
+        expenses = data["expenses"]
+    else:
+        input("Press Enter to begin entering new data...")
+        incomes = collect_income()
+        expenses = collect_expenses()
 
-        expenses: List[Dict[str, Any]] = collect_expenses()
-        total_expenses: float = calculate_total_expenses(expenses)
-        expense_summary: Dict[str, float] = summarize_expenses_by_category(expenses)
-
-    except Exception as e:
-        print(f"\n❌ An error occurred: {e}")
-        return
+    total_income = calculate_total_monthly_income(incomes)
+    total_expenses = calculate_total_expenses(expenses)
+    expense_summary = summarize_expenses_by_category(expenses)
 
     print("\n🔎 Income Summary:")
     for src in incomes:
@@ -38,6 +41,12 @@ def run_budget_tool() -> None:
 
     print(f"\n📊 Monthly Balance: ${balance:.2f}")
     print(f"📣 Status: {status}\n")
+
+    save = input("Would you like to save this budget data? (yes/no): ").lower()
+    if save == "yes":
+        save_budget_data(incomes, expenses)
+
+
 
 if __name__ == "__main__":
     run_budget_tool()
