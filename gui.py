@@ -6,6 +6,25 @@ from income import convert_to_monthly as convert_income
 from expenses import convert_to_monthly as convert_expense
 from storage import save_budget_data, load_budget_data
 
+CATEGORIES = {
+    "Essentials": [
+        "Rent/Mortgage", "Groceries", "Electricity", "Water", "Internet", 
+        "Transport", "Phone", "Health", "Insurance", "Debt Payments", "Education", "Pets"
+    ],
+    "Discretionary": [
+        "Eating Out", "Entertainment", "Shopping", "Personal Care", 
+        "Fitness", "Social/Events", "Travel/Saving For"
+    ],
+    "Irregular": [
+        "Holidays", "Home Maintenance", "Car WOF/Servicing", 
+        "Annual Bills", "Term Fees/School"
+    ],
+    "One-Off": [
+        "Unexpected Costs", "Emergency Fund Top-Ups", "Tech/Appliance Replacements"
+    ]
+}
+
+
 class BudgetApp:
     def __init__(self, root):
         self.root = root
@@ -97,6 +116,10 @@ class BudgetApp:
         self.expense_freq.set("monthly")
         self.expense_freq.pack(pady=5)
 
+        self.expense_group = ttk.Combobox(self.root, values=list(CATEGORIES.keys()))
+        self.expense_group.set("Essentials")
+        self.expense_group.pack(pady=5)
+
         ttk.Button(self.root, text="Add Expense", command=self.add_expense).pack(pady=10)
         ttk.Button(self.root, text="Finish & Show Summary", command=self.show_summary).pack(pady=10)
 
@@ -112,7 +135,8 @@ class BudgetApp:
                 "amount": amount,
                 "frequency": freq,
                 "monthly_equivalent": monthly,
-                "category_group": "GUI Entry"
+                "category_group": self.expense_group.get()
+
             })
 
             messagebox.showinfo("Expense Added", f"{name} – ${monthly}/month")
