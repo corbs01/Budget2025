@@ -169,6 +169,7 @@ class BudgetApp:
         ttk.Button(self.root, text="Save Budget", command=self.save_budget).pack(pady=5)
         ttk.Button(self.root, text="Show Expense Pie Chart", command=self.show_expense_pie_chart).pack(pady=5)
         ttk.Button(self.root, text="Edit Expenses", command=self.build_expense_editor).pack(pady=5)
+        ttk.Button(self.root, text="Edit Incomes", command=self.build_income_editor).pack(pady=5)
         ttk.Button(self.root, text="Return to Main Menu", command=self.build_main_menu).pack(pady=5)
 
     def save_budget(self):
@@ -218,6 +219,7 @@ class BudgetApp:
 
         ttk.Button(self.root, text="Edit Selected", command=self.edit_selected_expense).pack(pady=5)
         ttk.Button(self.root, text="Back to Summary", command=self.show_summary).pack(pady=5)
+        ttk.Button(self.root, text="Delete Selected", command=self.delete_selected_expense).pack(pady=5)
 
     def edit_selected_expense(self):
         try:
@@ -273,6 +275,96 @@ class BudgetApp:
 
         except ValueError:
             messagebox.showerror("Error", "Invalid values entered.")
+
+    def build_income_editor(self):
+        for widget in self.root.winfo_children():
+            widget.destroy()
+
+        tk.Label(self.root, text="✏️ Edit Incomes", font=("Helvetica", 16)).pack(pady=10)
+
+        self.income_listbox = tk.Listbox(self.root, width=60)
+        self.income_listbox.pack(pady=10)
+
+        for idx, inc in enumerate(self.incomes):
+            text = f"{idx+1}. {inc['name']} - ${inc['amount']} ({inc['frequency']})"
+            self.income_listbox.insert(tk.END, text)
+
+        ttk.Button(self.root, text="Edit Selected", command=self.edit_selected_income).pack(pady=5)
+        ttk.Button(self.root, text="Delete Selected", command=self.delete_selected_income).pack(pady=5)
+        ttk.Button(self.root, text="Back to Summary", command=self.show_summary).pack(pady=5)
+
+    def edit_selected_income(self):
+        try:
+            idx = self.income_listbox.curselection()[0]
+            self.current_income_index = idx
+            inc = self.incomes[idx]
+        except IndexError:
+            messagebox.showerror("Error", "Please select an income to edit.")
+            return
+
+        for widget in self.root.winfo_children():
+            widget.destroy()
+
+        tk.Label(self.root, text="Edit Income", font=("Helvetica", 14)).pack(pady=10)
+
+        self.edit_income_name = tk.Entry(self.root)
+        self.edit_income_name.insert(0, inc['name'])
+        self.edit_income_name.pack(pady=5)
+
+        self.edit_income_amount = tk.Entry(self.root)
+        self.edit_income_amount.insert(0, str(inc['amount']))
+        self.edit_income_amount.pack(pady=5)
+
+        self.edit_income_freq = ttk.Combobox(self.root, values=["weekly", "fortnightly", "monthly"])
+        self.edit_income_freq.set(inc['frequency'])
+        self.edit_income_freq.pack(pady=5)
+
+        ttk.Button(self.root, text="Save Changes", command=self.save_edited_income).pack(pady=10)
+        ttk.Button(self.root, text="Cancel", command=self.build_income_editor).pack(pady=5)
+
+    def save_edited_income(self):
+        try:
+            name = self.edit_income_name.get()
+            amount = float(self.edit_income_amount.get())
+            freq = self.edit_income_freq.get()
+            monthly = convert_income(amount, freq)
+
+            self.incomes[self.current_income_index] = {
+                "name": name,
+                "amount": amount,
+                "frequency": freq,
+                "monthly_equivalent": monthly
+            }
+
+            messagebox.showinfo("Saved", f"Updated {name}.")
+            self.build_income_editor()
+
+        except ValueError:
+            messagebox.showerror("Error", "Invalid values entered.")
+
+    def delete_selected_income(self):
+        try:
+            idx = self.income_listbox.curselection()[0]
+            name = self.incomes[idx]["name"]
+            confirm = messagebox.askyesno("Confirm Delete", f"Delete income '{name}'?")
+            if confirm:
+                del self.incomes[idx]
+                self.build_income_editor()
+        except IndexError:
+            messagebox.showerror("Error", "Please select an income to delete.")
+
+    def delete_selected_expense(self):
+        try:
+            idx = self.expense_listbox.curselection()[0]
+            item = self.expenses[idx]["item"]
+            confirm = messagebox.askyesno("Confirm Delete", f"Delete expense '{item}'?")
+            if confirm:
+                del self.expenses[idx]
+                self.build_expense_editor()
+        except IndexError:
+            messagebox.showerror("Error", "Please select an expense to delete.")
+
+
 
 
 if __name__ == "__main__":
