@@ -168,6 +168,7 @@ class BudgetApp:
 
         ttk.Button(self.root, text="Save Budget", command=self.save_budget).pack(pady=5)
         ttk.Button(self.root, text="Show Expense Pie Chart", command=self.show_expense_pie_chart).pack(pady=5)
+        ttk.Button(self.root, text="Edit Expenses", command=self.build_expense_editor).pack(pady=5)
         ttk.Button(self.root, text="Return to Main Menu", command=self.build_main_menu).pack(pady=5)
 
     def save_budget(self):
@@ -201,6 +202,77 @@ class BudgetApp:
         canvas = FigureCanvasTkAgg(fig, master=chart_window)
         canvas.draw()
         canvas.get_tk_widget().pack()
+
+    def build_expense_editor(self):
+        for widget in self.root.winfo_children():
+            widget.destroy()
+
+        tk.Label(self.root, text="✏️ Edit Expenses", font=("Helvetica", 16)).pack(pady=10)
+
+        self.expense_listbox = tk.Listbox(self.root, width=60)
+        self.expense_listbox.pack(pady=10)
+
+        for idx, exp in enumerate(self.expenses):
+            text = f"{idx+1}. {exp['item']} - ${exp['amount']} ({exp['frequency']}) in {exp['category_group']}"
+            self.expense_listbox.insert(tk.END, text)
+
+        ttk.Button(self.root, text="Edit Selected", command=self.edit_selected_expense).pack(pady=5)
+        ttk.Button(self.root, text="Back to Summary", command=self.show_summary).pack(pady=5)
+
+    def edit_selected_expense(self):
+        try:
+            idx = self.expense_listbox.curselection()[0]
+            self.current_edit_index = idx
+            exp = self.expenses[idx]
+        except IndexError:
+            messagebox.showerror("Error", "Please select an expense to edit.")
+            return
+
+        for widget in self.root.winfo_children():
+            widget.destroy()
+
+        tk.Label(self.root, text="Edit Expense", font=("Helvetica", 14)).pack(pady=10)
+
+        self.edit_name = tk.Entry(self.root)
+        self.edit_name.insert(0, exp['item'])
+        self.edit_name.pack(pady=5)
+
+        self.edit_amount = tk.Entry(self.root)
+        self.edit_amount.insert(0, str(exp['amount']))
+        self.edit_amount.pack(pady=5)
+
+        self.edit_freq = ttk.Combobox(self.root, values=["weekly", "fortnightly", "monthly", "quarterly", "annual"])
+        self.edit_freq.set(exp['frequency'])
+        self.edit_freq.pack(pady=5)
+
+        self.edit_group = ttk.Combobox(self.root, values=list(CATEGORIES.keys()))
+        self.edit_group.set(exp['category_group'])
+        self.edit_group.pack(pady=5)
+
+        ttk.Button(self.root, text="Save Changes", command=self.save_edited_expense).pack(pady=10)
+        ttk.Button(self.root, text="Cancel", command=self.build_expense_editor).pack(pady=5)
+
+    def save_edited_expense(self):
+        try:
+            name = self.edit_name.get()
+            amount = float(self.edit_amount.get())
+            freq = self.edit_freq.get()
+            group = self.edit_group.get()
+            monthly = convert_expense(amount, freq)
+
+            self.expenses[self.current_edit_index] = {
+                "item": name,
+                "amount": amount,
+                "frequency": freq,
+                "monthly_equivalent": monthly,
+                "category_group": group
+            }
+
+            messagebox.showinfo("Saved", f"Updated {name}.")
+            self.build_expense_editor()
+
+        except ValueError:
+            messagebox.showerror("Error", "Invalid values entered.")
 
 
 if __name__ == "__main__":
