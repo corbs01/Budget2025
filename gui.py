@@ -5,6 +5,9 @@ from tkinter import ttk, messagebox
 from income import convert_to_monthly as convert_income
 from expenses import convert_to_monthly as convert_expense
 from storage import save_budget_data, load_budget_data
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
 
 CATEGORIES = {
     "Essentials": [
@@ -164,11 +167,41 @@ class BudgetApp:
         tk.Label(self.root, text=f"Status: {status}", font=("Helvetica", 12)).pack(pady=10)
 
         ttk.Button(self.root, text="Save Budget", command=self.save_budget).pack(pady=5)
+        ttk.Button(self.root, text="Show Expense Pie Chart", command=self.show_expense_pie_chart).pack(pady=5)
         ttk.Button(self.root, text="Return to Main Menu", command=self.build_main_menu).pack(pady=5)
 
     def save_budget(self):
         save_budget_data(self.incomes, self.expenses)
         messagebox.showinfo("Saved", "Your budget has been saved.")
+
+    def show_expense_pie_chart(self):
+        summary = {}
+        for e in self.expenses:
+            group = e["category_group"]
+            summary.setdefault(group, 0)
+            summary[group] += e["monthly_equivalent"]
+
+        if not summary:
+            messagebox.showinfo("No Data", "No expenses to display in chart.")
+            return
+
+        # Create chart
+        labels = list(summary.keys())
+        values = list(summary.values())
+
+        fig, ax = plt.subplots(figsize=(4, 4))
+        ax.pie(values, labels=labels, autopct='%1.1f%%', startangle=90)
+        ax.axis('equal')  # Equal aspect ratio ensures pie is round
+        fig.tight_layout()
+
+        # Create new window
+        chart_window = tk.Toplevel(self.root)
+        chart_window.title("Expense Breakdown Chart")
+
+        canvas = FigureCanvasTkAgg(fig, master=chart_window)
+        canvas.draw()
+        canvas.get_tk_widget().pack()
+
 
 if __name__ == "__main__":
     root = tk.Tk()
